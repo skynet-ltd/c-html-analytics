@@ -21,26 +21,18 @@ Error *walk_callback(const char *path, struct dirent *dr, void *ret)
 
 int main(int argc, char *const *argv)
 {
-    int err = add_string_flag("d", NULL);
+    int err = add_string_flag("d", "");
+    if (err)
+    {
+        return err;
+    }
+    err = add_int_flag("j", 10);
     if (err)
     {
         return err;
     }
     parse(argc, argv);
-    vector *str_vec = new_vector(sizeof(char *), 0);
-    Error *err_s = walk_dir(get_string_flag("d"), walk_callback, (void *)str_vec);
-    if (err_s)
-    {
-        printf("Error: %s\n", err_s->error);
-        return -2;
-    }
-    for (int i = 0; i < str_vec->length(str_vec); i++)
-    {
-        printf("%s\n", (const char *)str_vec->get(str_vec, i));
-    }
-    printf("Size of vector %i,capacity %i\n", str_vec->length(str_vec), str_vec->cap(str_vec));
-
-    //clean memory
-    str_vec->clear(str_vec, 1);
+    printf("%i\n", get_int_flag("j"));
+    printf("%s\n", get_string_flag("d"));
     cli_free();
 }
