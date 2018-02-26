@@ -52,7 +52,10 @@ int main(int argc, char *const *argv)
     while (getline(&line, &n, in_file) > 0)
     {
         fprintf(stdout, "%s\n", line);
+        free(line);
+        line = NULL;
     }
+    free(line);
     fclose(in_file);
     cli_free(cli_store);
 }
