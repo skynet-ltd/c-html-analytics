@@ -22,24 +22,37 @@ Error *walk_callback(const char *path, struct dirent *dr, void *ret)
 int main(int argc, char *const *argv)
 {
     cli *cli_store = new_cli();
-    int err = cli_store->add_string_flag(cli_store, "d", "aaaa");
+    int err = cli_store->add_string_flag(cli_store, "f", "");
     if (err)
     {
+        printf("add_string_flag return %i\n", err);
         return err;
     }
     err = cli_store->add_int_flag(cli_store, "j", 10);
     if (err)
     {
+        printf("add_int_flag return %i\n", err);
         return err;
     }
     cli_store->parse(cli_store, argc, argv);
-    const char *dir = cli_store->get_string_flag(cli_store, "d");
-    int jobs = cli_store->get_int_flag(cli_store, "j");
-    if (dir == "")
+    const char *in_file_path = cli_store->get_string_flag(cli_store, "f");
+    if (in_file_path == "")
     {
         return -1;
     }
-    printf("%i\n", jobs);
-    printf("%s\n", dir);
+    int jobs = cli_store->get_int_flag(cli_store, "j");
+    FILE *in_file = fopen(in_file_path, "r");
+    if (!in_file)
+    {
+        fprintf(stderr, "error: can't open file %s\n", in_file_path);
+        return -2;
+    }
+    char *line = NULL;
+    size_t n = 0;
+    while (getline(&line, &n, in_file) > 0)
+    {
+        fprintf(stdout, "%s\n", line);
+    }
+    fclose(in_file);
     cli_free(cli_store);
 }

@@ -59,7 +59,7 @@ void parse(cli *self, int argc, char *const *argv)
         {
             if (**keys_p == c && optarg)
             {
-                // printf("%s : %s\n", *keys_p, optarg);
+                printf("%s : %s\n", *keys_p, optarg);
                 g_hash_table_replace(self->cli_flags, (gpointer)strdup(*keys_p), (gpointer)strdup(optarg));
             }
         }
