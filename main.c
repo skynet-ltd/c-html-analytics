@@ -21,18 +21,25 @@ Error *walk_callback(const char *path, struct dirent *dr, void *ret)
 
 int main(int argc, char *const *argv)
 {
-    int err = add_string_flag("d", "");
+    cli *cli_store = new_cli();
+    int err = cli_store->add_string_flag(cli_store, "d", "aaaa");
     if (err)
     {
         return err;
     }
-    err = add_int_flag("j", 10);
+    err = cli_store->add_int_flag(cli_store, "j", 10);
     if (err)
     {
         return err;
     }
-    parse(argc, argv);
-    printf("%i\n", get_int_flag("j"));
-    printf("%s\n", get_string_flag("d"));
-    cli_free();
+    cli_store->parse(cli_store, argc, argv);
+    const char *dir = cli_store->get_string_flag(cli_store, "d");
+    int jobs = cli_store->get_int_flag(cli_store, "j");
+    if (dir == "")
+    {
+        return -1;
+    }
+    printf("%i\n", jobs);
+    printf("%s\n", dir);
+    cli_free(cli_store);
 }

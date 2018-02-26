@@ -8,19 +8,25 @@
 #include <string.h>
 #include <inttypes.h>
 
-typedef struct
+typedef struct cli
 {
-    Error *last_error;
     GHashTable *cli_flags;
+    int (*add_string_flag)(struct cli *, const char *, const char *);
+    int (*add_int_flag)(struct cli *, const char *, int);
+    const char *(*get_string_flag)(struct cli *, const char *);
+    int (*get_int_flag)(struct cli *, const char *);
+    void (*parse)(struct cli *, int, char *const *);
+    void (*free)(struct cli *);
 } cli;
 
-void init_if_null(cli **);
 int asprintf(char **, const char *, ...);
 
-extern int add_string_flag(const char *, const char *);
-extern const char *get_string_flag(const char *);
-extern int add_int_flag(const char *, int);
-extern int get_int_flag(const char *);
+extern cli *new_cli();
 
-extern void parse(int, char *const *);
-extern void cli_free();
+int add_string_flag(cli *, const char *, const char *);
+const char *get_string_flag(cli *, const char *);
+int add_int_flag(cli *, const char *, int);
+int get_int_flag(cli *, const char *);
+
+void parse(cli *, int, char *const *);
+void cli_free(cli *);

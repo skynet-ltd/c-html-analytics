@@ -1,56 +1,48 @@
 #include "../headers/cli.h"
 
-static cli *store = &(cli){.cli_flags = NULL};
-
-void init_if_empty()
-{
-    if (store->cli_flags == NULL)
-    {
-        store->cli_flags = g_hash_table_new(g_str_hash, g_str_equal);
-    }
-}
-
-int add_string_flag(const char *flag, const char *def)
+int add_string_flag(cli *self, const char *flag, const char *def)
 {
     if (flag == NULL)
     {
         return -1;
     }
-    init_if_empty();
-    if (g_hash_table_insert(store->cli_flags, (gpointer)flag, (gpointer)def) == TRUE)
+    if (g_hash_table_insert(self->cli_flags, (gpointer)strdup(flag), (gpointer)strdup(def)) == TRUE)
     {
         return 0;
     }
     return -1;
 }
-int add_int_flag(const char *flag, int def)
+int add_int_flag(cli *self, const char *flag, int def)
 {
     if (flag == NULL)
     {
         return -1;
     }
-    init_if_empty();
-    if (g_hash_table_insert(store->cli_flags, (gpointer)flag, (gpointer)(&def)) == TRUE)
+    char *str;
+    asprintf(&str, "%i", def);
+    if (g_hash_table_insert(self->cli_flags, (gpointer)strdup(flag), (gpointer)strdup(str)) == TRUE)
     {
+        free(str);
         return 0;
     }
+    free(str);
     return -1;
 }
 
-const char *get_string_flag(const char *key)
+const char *get_string_flag(cli *self, const char *key)
 {
-    return g_hash_table_lookup(store->cli_flags, (gpointer)key);
+    return g_hash_table_lookup(self->cli_flags, (gpointer)key);
 }
 
-int get_int_flag(const char *key)
+int get_int_flag(cli *self, const char *key)
 {
-    const char *ret = g_hash_table_lookup(store->cli_flags, (gpointer)key);
+    const char *ret = g_hash_table_lookup(self->cli_flags, (gpointer)key);
     return strtoimax(ret, (char **)NULL, 10);
 }
 
-void parse(int argc, char *const *argv)
+void parse(cli *self, int argc, char *const *argv)
 {
-    const char **keys = (const char **)g_hash_table_get_keys_as_array(store->cli_flags, 0);
+    const char **keys = (const char **)g_hash_table_get_keys_as_array(self->cli_flags, 0);
     opterr = 0;
     char *short_opt = strdup("");
     for (const char **keys_p = keys; *keys_p; keys_p++)
@@ -67,8 +59,8 @@ void parse(int argc, char *const *argv)
         {
             if (**keys_p == c && optarg)
             {
-                //printf("%s : %s\n", *keys_p, optarg);
-                g_hash_table_replace(store->cli_flags, (gpointer)*keys_p, (gpointer)optarg);
+                // printf("%s : %s\n", *keys_p, optarg);
+                g_hash_table_replace(self->cli_flags, (gpointer)strdup(*keys_p), (gpointer)strdup(optarg));
             }
         }
     }
@@ -76,7 +68,31 @@ void parse(int argc, char *const *argv)
     g_free(keys);
 }
 
-void cli_free()
+void cli_free(cli *self)
 {
-    g_hash_table_destroy(store->cli_flags);
+    g_hash_table_destroy(self->cli_flags);
+    free(self);
+}
+
+void key_destroy(gpointer data)
+{
+    g_free(data);
+}
+
+void val_destroy(gpointer data)
+{
+    g_free(data);
+}
+
+cli *new_cli()
+{
+    cli *cli_s = calloc(1, sizeof(cli));
+    cli_s->cli_flags = g_hash_table_new_full(g_str_hash, g_str_equal, key_destroy, val_destroy);
+    cli_s->add_int_flag = add_int_flag;
+    cli_s->add_string_flag = add_string_flag;
+    cli_s->get_int_flag = get_int_flag;
+    cli_s->get_string_flag = get_string_flag;
+    cli_s->free = cli_free;
+    cli_s->parse = parse;
+    return cli_s;
 }
